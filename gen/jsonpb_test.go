@@ -11,13 +11,12 @@ import (
 func TestGenerate(t *testing.T) {
 	tests := []string{
 		"single_rpc",
-		"mixed_structs_and_protos",
+		"nested_structs",
 		"already_defined",
 	}
 
 	skip := map[string]string{
-		"mixed_structs_and_protos": "",
-		"already_defined":          "",
+		"already_defined": "",
 	}
 
 	for _, testname := range tests {
