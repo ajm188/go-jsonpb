@@ -16,7 +16,7 @@ func TestGenerate(t *testing.T) {
 	}
 
 	skip := map[string]string{
-		"already_defined": "",
+		"already_defined": "Currently, protoc-gen-jsonpb is not idempotent. In a future version, we can make that change, and enabled this test",
 	}
 
 	for _, testname := range tests {
