@@ -7,6 +7,8 @@ import (
 	"go/parser"
 	"go/token"
 	"io"
+	"log"
+	"os"
 	"strings"
 
 	"golang.org/x/tools/go/ast/astutil"
@@ -94,13 +96,13 @@ func PreApply(cur *astutil.Cursor) bool {
 	default:
 	}
 
-	fmt.Printf("(pre) found %T, not traversing it\n", cur.Node())
+	log.Printf("(pre) found %T, not traversing it\n", cur.Node())
 
 	return false
 }
 
 func PostApply(cur *astutil.Cursor) bool {
-	fmt.Printf("(post-apply) %T\n", cur.Node())
+	log.Printf("(post-apply) %T\n", cur.Node())
 
 	if cur.Node() == nil {
 		return true
@@ -111,7 +113,7 @@ func PostApply(cur *astutil.Cursor) bool {
 		return false
 	case *ast.GenDecl:
 		for _, spec := range node.Specs {
-			fmt.Printf("decl spec: %+v (%T)\n", spec, spec)
+			log.Printf("decl spec: %+v (%T)\n", spec, spec)
 
 			switch ts := spec.(type) {
 			case *ast.TypeSpec:
@@ -147,7 +149,7 @@ func PostApply(cur *astutil.Cursor) bool {
 		}
 		return true
 	default:
-		fmt.Printf("yikes, got something that's not a GenDecl %T\n", cur.Node())
+		log.Printf("yikes, got something that's not a GenDecl %T\n", cur.Node())
 	}
 
 	return true
@@ -165,8 +167,9 @@ func Generate(src string, dest io.Writer) error {
 	}
 
 	if ok := astutil.AddImport(fset, f, "github.com/ajm188/go-jsonpb"); !ok {
-		fmt.Printf("Failed to add json2 import.\nPlease add the following line:\n\t")
-		fmt.Println(`import "github.com/ajm188/go-jsonpb"`)
+		// These messages have to go regardless of log level.
+		fmt.Fprintf(os.Stderr, "Failed to add json2 import.\nPlease add the following line:\n\t")
+		fmt.Fprintln(os.Stderr, `import "github.com/ajm188/go-jsonpb"`)
 	}
 
 	n := astutil.Apply(f, PreApply, PostApply)
