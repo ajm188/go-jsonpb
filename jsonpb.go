@@ -11,7 +11,7 @@ func Marshal(pb proto.Message) ([]byte, error) {
 	buf := bytes.Buffer{}
 	m := jsonpb.Marshaler{}
 
-	if err := m.Marshal(buf, pb); err != nil {
+	if err := m.Marshal(&buf, pb); err != nil {
 		return nil, err
 	}
 
