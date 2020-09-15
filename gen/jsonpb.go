@@ -57,10 +57,10 @@ func JSON2Marshaler(id *ast.Ident) *ast.FuncDecl {
 						&ast.CallExpr{
 							Fun: &ast.SelectorExpr{
 								X: &ast.Ident{
-									Name: "json2",
+									Name: "jsonpb",
 								},
 								Sel: &ast.Ident{
-									Name: "MarshalPB",
+									Name: "Marshal",
 								},
 							},
 							Args: []ast.Expr{
@@ -153,9 +153,9 @@ func Generate(src string, dest io.Writer) error {
 		return err
 	}
 
-	if ok := astutil.AddImport(fset, f, "vitess.io/vitess/go/json2"); !ok {
+	if ok := astutil.AddImport(fset, f, "github.com/ajm188/go-jsonpb"); !ok {
 		fmt.Printf("Failed to add json2 import.\nPlease add the following line:\n\t")
-		fmt.Println(`import "vitess.io/vitess/go/json2"`)
+		fmt.Println(`import "github.com/ajm188/go-jsonpb"`)
 	}
 
 	n := astutil.Apply(f, PreApply, PostApply)
