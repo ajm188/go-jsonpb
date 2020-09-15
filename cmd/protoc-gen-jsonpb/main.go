@@ -1,7 +1,9 @@
 package main
 
 import (
+	"flag"
 	"io/ioutil"
+	"log"
 	"os"
 
 	"github.com/ajm188/go-jsonpb/gen"
@@ -26,6 +28,11 @@ func getSrc(filename string) string {
 }
 
 func getDest(filename string) *os.File {
+	if filename == "" {
+		log.Printf("-dest left blank, defaulting to stdout")
+		return os.Stdout
+	}
+
 	f, err := os.Create(filename)
 
 	must(err)
@@ -34,11 +41,33 @@ func getDest(filename string) *os.File {
 	return f
 }
 
+func setLogger(debug bool) {
+	if debug {
+		log.SetFlags(log.LstdFlags)
+		log.SetOutput(os.Stderr)
+
+		return
+	}
+
+	log.SetOutput(ioutil.Discard)
+}
+
 func main() {
-	srcname := os.Args[1]
-	destname := os.Args[2]
-	src := getSrc(srcname)
-	dest := getDest(destname)
+	srcfile := flag.String("src", "", "go file to use as source for transformation")
+	destfile := flag.String("dest", "", "destination to write transformed file. blank to write to stdout")
+	debug := flag.Bool("debug", false, "include debug logs")
+
+	flag.Parse()
+
+	setLogger(*debug)
+
+	if *srcfile == "" {
+		log.SetOutput(os.Stderr)
+		log.Fatal("must pass -src")
+	}
+
+	src := getSrc(*srcfile)
+	dest := getDest(*destfile)
 
 	defer dest.Close()
 
