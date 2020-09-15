@@ -12,6 +12,13 @@ import (
 	"golang.org/x/tools/go/ast/astutil"
 )
 
+// JSON2Marshaler returns a function declaration of an instance method on the
+// type named by `id`. The instance method will define a function like:
+//
+// 		func (m *T) MarshalJSON() ([]byte, error) {
+// 			return jsonpb.Marshal(m)
+//		}
+// where `jsonpb` is the package defined in github.com/ajm188/go-jsonpb
 func JSON2Marshaler(id *ast.Ident) *ast.FuncDecl {
 	return &ast.FuncDecl{
 		Recv: &ast.FieldList{
@@ -146,6 +153,10 @@ func PostApply(cur *astutil.Cursor) bool {
 	return true
 }
 
+// Generate parses a go file in `src`, adds an import of
+// github.com/ajm188/go-jsonpb (our jsonpb wrapper) adds a `json.Marshaler`
+// implementation to every protobuf struct in the file, and writes the transformed
+// AST to `dest`.
 func Generate(src string, dest io.Writer) error {
 	fset := token.NewFileSet()
 	f, err := parser.ParseFile(fset, "", src, parser.ParseComments)

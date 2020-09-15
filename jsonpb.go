@@ -7,6 +7,7 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
+// Marshal uses protobuf/jsonpb to marshal a proto message into JSON.
 func Marshal(pb proto.Message) ([]byte, error) {
 	buf := bytes.Buffer{}
 	m := jsonpb.Marshaler{}
