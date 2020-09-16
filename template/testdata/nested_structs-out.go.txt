@@ -1,0 +1,11 @@
+package test
+
+import "github.com/ajm188/go-jsonpb"
+
+func (m *TestRequest) MarshalJSON() ([]byte, error) {
+	return jsonpb.Marshal(m)
+}
+
+func (m *TestComplexRequest) MarshalJSON() ([]byte, error) {
+	return jsonpb.Marshal(m)
+}
