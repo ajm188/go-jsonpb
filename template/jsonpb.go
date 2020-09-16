@@ -36,6 +36,10 @@ func Generate(src string, dest io.Writer) error {
 
 	pkg := ProtoPackage{}
 
+	// TODO: it would be great to inject this into the other preapplier (like we do with gen.NewPostApplier)
+	// But that could very quickly turn into a registry of asttype->handler func, which,
+	// on the one hand probably wouldn't be that bad, but on the other hand, is definitely overkll
+	// for our use case.
 	preapplier := func(cur *astutil.Cursor) bool {
 		if cur.Node() == nil {
 			return true
