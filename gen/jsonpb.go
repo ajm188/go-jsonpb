@@ -101,58 +101,57 @@ func PreApply(cur *astutil.Cursor) bool {
 	return false
 }
 
-func PostApply(cur *astutil.Cursor) bool {
-	log.Printf("(post-apply) %T\n", cur.Node())
+func NewPostApplier(protofunc func(*astutil.Cursor, *ast.TypeSpec)) astutil.ApplyFunc {
+	return func(cur *astutil.Cursor) bool {
+		if cur.Node() == nil {
+			return true
+		}
 
-	if cur.Node() == nil {
-		return true
-	}
+		switch node := cur.Node().(type) {
+		case *ast.File:
+			return false
+		case *ast.GenDecl:
+			for _, spec := range node.Specs {
+				log.Printf("decl spec: %+v (%T)\n", spec, spec)
 
-	switch node := cur.Node().(type) {
-	case *ast.File:
-		return false
-	case *ast.GenDecl:
-		for _, spec := range node.Specs {
-			log.Printf("decl spec: %+v (%T)\n", spec, spec)
+				switch ts := spec.(type) {
+				case *ast.TypeSpec:
+					switch s := ts.Type.(type) {
+					case *ast.StructType:
+						isProto := false
 
-			switch ts := spec.(type) {
-			case *ast.TypeSpec:
-				switch s := ts.Type.(type) {
-				case *ast.StructType:
-					isProto := false
+						if s.Fields.List == nil {
+							return true
+						}
 
-					if s.Fields.List == nil {
+						for _, field := range s.Fields.List {
+							if field.Tag == nil {
+								continue
+							}
+
+							if strings.Contains(field.Tag.Value, "protobuf:") {
+								isProto = true
+								break
+							}
+						}
+
+						if isProto {
+							protofunc(cur, ts)
+						}
+					default:
 						return true
-					}
-
-					for _, field := range s.Fields.List {
-						if field.Tag == nil {
-							continue
-						}
-
-						if strings.Contains(field.Tag.Value, "protobuf:") {
-							isProto = true
-							break
-						}
-					}
-
-					if isProto {
-						fun := JSON2Marshaler(ts.Name)
-						cur.InsertAfter(fun)
 					}
 				default:
 					return true
 				}
-			default:
-				return true
 			}
+			return true
+		default:
+			log.Printf("yikes, got something that's not a GenDecl %T\n", cur.Node())
 		}
-		return true
-	default:
-		log.Printf("yikes, got something that's not a GenDecl %T\n", cur.Node())
-	}
 
-	return true
+		return true
+	}
 }
 
 // Generate parses a go file in `src`, adds an import of
@@ -172,7 +171,9 @@ func Generate(src string, dest io.Writer) error {
 		fmt.Fprintln(os.Stderr, `import "github.com/ajm188/go-jsonpb"`)
 	}
 
-	n := astutil.Apply(f, PreApply, PostApply)
+	n := astutil.Apply(f, PreApply, NewPostApplier(func(cur *astutil.Cursor, spec *ast.TypeSpec) {
+		cur.InsertAfter(JSON2Marshaler(spec.Name))
+	}))
 	if err := format.Node(dest, fset, n); err != nil {
 		return fmt.Errorf("error dumping ast: %s", err)
 	}
