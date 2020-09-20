@@ -11,15 +11,20 @@ import (
 	"golang.org/x/tools/go/ast/astutil"
 )
 
+// ProtoPackage represents a Go package containing protobuf structs.
 type ProtoPackage struct {
 	Name       string
 	ProtoTypes []ProtoType
 }
 
+// ProtoType represents metadata about a protobuf struct.
 type ProtoType struct {
 	Type string
 }
 
+// Generate parses the src string as a go AST, then finds all structs that contain
+// protobuf fields, and writes a new Go file to dest that contains custom json.Marshaler
+// implementations (using jsonpb.Marshal) for each of those structs.
 func Generate(src string, dest io.Writer) error {
 	fset := token.NewFileSet()
 	// We don't care about comments when doing template-generation mode, since
