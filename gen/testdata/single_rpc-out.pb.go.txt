@@ -34,7 +34,7 @@ type TestRequest struct {
 }
 
 func (m *TestRequest) MarshalJSON() ([]byte, error) {
-    return jsonpb.Marshal(m)
+    return protojson.Marshal(m)
 }
 
 func (m *TestRequest) Reset()         { *m = TestRequest{} }

@@ -1,11 +1,11 @@
 package test
 
-import "github.com/ajm188/go-jsonpb"
+import "google.golang.org/protobuf/encoding/protojson"
 
 func (m *TestRequest) MarshalJSON() ([]byte, error) {
-	return jsonpb.Marshal(m)
+	return protojson.Marshal(m)
 }
 
 func (m *TestComplexRequest) MarshalJSON() ([]byte, error) {
-	return jsonpb.Marshal(m)
+	return protojson.Marshal(m)
 }

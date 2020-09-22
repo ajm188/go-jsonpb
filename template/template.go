@@ -2,9 +2,9 @@ package template
 
 const jsonpbTemplate = `package {{ .Name }}
 
-import "github.com/ajm188/go-jsonpb"
+import "google.golang.org/protobuf/encoding/protojson"
 {{ range .ProtoTypes }}
 func (m *{{ .Type }}) MarshalJSON() ([]byte, error) {
-	return jsonpb.Marshal(m)
+	return protojson.Marshal(m)
 }
 {{ end }}`

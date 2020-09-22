@@ -66,7 +66,7 @@ func JSON2Marshaler(id *ast.Ident) *ast.FuncDecl {
 						&ast.CallExpr{
 							Fun: &ast.SelectorExpr{
 								X: &ast.Ident{
-									Name: "jsonpb",
+									Name: "protojson",
 								},
 								Sel: &ast.Ident{
 									Name: "Marshal",
@@ -201,10 +201,10 @@ func Generate(src string, dest io.Writer) error {
 		return err
 	}
 
-	if ok := astutil.AddImport(fset, f, "github.com/ajm188/go-jsonpb"); !ok {
+	if ok := astutil.AddImport(fset, f, "google.golang.org/protobuf/encoding/protojson"); !ok {
 		// These messages have to go regardless of log level.
 		fmt.Fprintf(os.Stderr, "Failed to add json2 import.\nPlease add the following line:\n\t")
-		fmt.Fprintln(os.Stderr, `import "github.com/ajm188/go-jsonpb"`)
+		fmt.Fprintln(os.Stderr, `import "google.golang.org/protobuf/encoding/protojson"`)
 	}
 
 	n := astutil.Apply(f, PreApply, NewPostApplier(func(cur *astutil.Cursor, spec *ast.TypeSpec) {
