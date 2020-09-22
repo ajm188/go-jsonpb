@@ -1,20 +1,11 @@
 package jsonpb
 
 import (
-	"bytes"
-
-	protojson "github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 )
 
 // Marshal uses protobuf/jsonpb to marshal a proto message into JSON.
 func Marshal(pb proto.Message) ([]byte, error) {
-	buf := bytes.Buffer{}
-	m := protojson.Marshaler{}
-
-	if err := m.Marshal(&buf, pb); err != nil {
-		return nil, err
-	}
-
-	return buf.Bytes(), nil
+	return protojson.Marshal(pb)
 }
