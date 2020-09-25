@@ -98,9 +98,7 @@ func collectMessages(file *protogen.File) []*protogen.Message {
 	}
 
 	initMessages := func(messages []*protogen.Message) {
-		for _, message := range messages {
-			allMessages = append(allMessages, message)
-		}
+		allMessages = append(allMessages, messages...)
 	}
 
 	initMessages(file.Messages)
