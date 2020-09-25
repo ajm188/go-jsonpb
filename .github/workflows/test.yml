@@ -1,0 +1,20 @@
+name: test
+on: [push, pull_request]
+
+jobs:
+  checkout:
+    - uses: actions/checkout@v2
+  test:
+    needs: checkout
+    strategy:
+      matrix:
+        go: ['1.13', '1.14', '1.15']
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+    - name: Setup Go v${{ matrix.go }}
+      uses: actions/setup-go
+      with:
+        go-version: ${{ matrix.go }}
+    - name: Run tests ${{ matrix.go }}
+      run: go test -v ./...
