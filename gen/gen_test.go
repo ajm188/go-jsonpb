@@ -12,6 +12,22 @@ import (
 	"google.golang.org/protobuf/types/pluginpb"
 )
 
+var (
+	major int32 = 1
+	minor int32 = 2
+	patch int32 = 3
+
+	deprecated bool = true
+
+	req = &pluginpb.CodeGeneratorRequest{
+		CompilerVersion: &pluginpb.Version{
+			Major: &major,
+			Minor: &minor,
+			Patch: &patch,
+		},
+	}
+)
+
 type TestFile struct {
 	b []string
 }
@@ -35,23 +51,6 @@ func (tf *TestFile) P(ts ...interface{}) {
 }
 
 func TestGenerateHeader(t *testing.T) {
-	var (
-		major int32 = 1
-		minor int32 = 2
-		patch int32 = 3
-
-		deprecated bool = true
-	)
-
-	req := &pluginpb.CodeGeneratorRequest{
-		CompilerVersion: &pluginpb.Version{
-			Major: &major,
-			Minor: &minor,
-			Patch: &patch,
-		},
-	}
-
-	req.GetCompilerVersion()
 	tests := []struct {
 		name  string
 		file  *protogen.File
@@ -96,6 +95,93 @@ func TestGenerateHeader(t *testing.T) {
 			GenerateHeader(g, req, test.file)
 
 			assert.Equal(t, test.lines, g.b, "Got %+v", g.b)
+		})
+	}
+}
+
+func TestCollectMessages(t *testing.T) {
+	tests := []struct {
+		name     string
+		file     *protogen.File
+		messages []string
+	}{
+		{
+			name: "flat file",
+			file: &protogen.File{
+				Messages: []*protogen.Message{
+					{
+						GoIdent:  protogen.GoIdent{GoName: "T1"},
+						Messages: []*protogen.Message{},
+					},
+					{
+						GoIdent:  protogen.GoIdent{GoName: "T2"},
+						Messages: []*protogen.Message{},
+					},
+				},
+			},
+			messages: []string{
+				"T1",
+				"T2",
+			},
+		},
+		{
+			name: "mixed nesting",
+			file: &protogen.File{
+				Messages: []*protogen.Message{
+					{
+						GoIdent: protogen.GoIdent{GoName: "T1"},
+						Messages: []*protogen.Message{
+							{
+								GoIdent:  protogen.GoIdent{GoName: "T1_A"},
+								Messages: []*protogen.Message{},
+							},
+						},
+					},
+					{
+						GoIdent: protogen.GoIdent{GoName: "T2"},
+						Messages: []*protogen.Message{
+							{
+								GoIdent: protogen.GoIdent{GoName: "T2_A"},
+								Messages: []*protogen.Message{
+									{
+										GoIdent:  protogen.GoIdent{GoName: "T2_A_1"},
+										Messages: []*protogen.Message{},
+									},
+								},
+							},
+							{
+								GoIdent:  protogen.GoIdent{GoName: "T2_B"},
+								Messages: []*protogen.Message{},
+							},
+						},
+					},
+					{
+						GoIdent:  protogen.GoIdent{GoName: "T3"},
+						Messages: []*protogen.Message{},
+					},
+				},
+			},
+			messages: []string{
+				"T1",
+				"T2",
+				"T3",
+				"T1_A",
+				"T2_A",
+				"T2_B",
+				"T2_A_1",
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			messages := collectMessages(test.file)
+			messageNames := make([]string, len(messages))
+			for i, message := range messages {
+				messageNames[i] = message.GoIdent.GoName
+			}
+
+			assert.Equal(t, test.messages, messageNames)
 		})
 	}
 }
