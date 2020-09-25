@@ -55,4 +55,17 @@ func TestEndToEnd(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, string(expected), string(result))
+
+	cmd = exec.Command("protoc", "--go-json_out=protobuf=github:.", "-Itestdata", "testdata/test.proto")
+	cmd.Env = append(cmd.Env, fmt.Sprintf("PATH=.:%s", envPATH))
+
+	require.NoError(t, cmd.Run())
+
+	result, err = ioutil.ReadFile("test_json.pb.go")
+	require.NoError(t, err)
+
+	expected, err = ioutil.ReadFile("testdata/test_json-github.pb.go.out")
+	require.NoError(t, err)
+
+	assert.Equal(t, string(expected), string(result))
 }

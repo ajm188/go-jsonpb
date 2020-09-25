@@ -113,9 +113,10 @@ func TestGenerateHeader(t *testing.T) {
 
 func TestGenerateMarshalers(t *testing.T) {
 	tests := []struct {
-		name     string
-		messages []*protogen.Message
-		lines    []string
+		name            string
+		messages        []*protogen.Message
+		useGithubProtos bool
+		lines           []string
 	}{
 		{
 			name: "",
@@ -127,6 +128,7 @@ func TestGenerateMarshalers(t *testing.T) {
 					GoIdent: protogen.GoIdent{GoName: "T2"},
 				},
 			},
+			useGithubProtos: false,
 			lines: []string{
 				"func (x *T1) MarshalJSON() ([]byte, error) {",
 				"return protojson.Marshal(x)",
@@ -139,16 +141,39 @@ func TestGenerateMarshalers(t *testing.T) {
 			},
 		},
 		{
-			name:     "empty message list",
-			messages: []*protogen.Message{},
-			lines:    []string{},
+			name:            "empty message list",
+			messages:        []*protogen.Message{},
+			useGithubProtos: false,
+			lines:           []string{},
+		},
+		{
+			name: "using github protobuf package",
+			messages: []*protogen.Message{
+				{
+					GoIdent: protogen.GoIdent{GoName: "T1"},
+				},
+			},
+			useGithubProtos: true,
+			lines: []string{
+				"func (x *T1) MarshalJSON() ([]byte, error) {",
+				"buf := bytes.Buffer{}",
+				"m := jsonpb.Marshaler{}",
+				"",
+				"if err := m.Marshal(&buf, x); err != nil {",
+				"return nil, err",
+				"}",
+				"",
+				"return buf.Bytes(), nil",
+				"}",
+				"",
+			},
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			g := &TestFile{b: []string{}}
-			GenerateMarshalers(g, test.messages)
+			GenerateMarshalers(g, test.messages, Options{GithubProtobuf: test.useGithubProtos})
 
 			assert.Equal(t, test.lines, g.b)
 		})

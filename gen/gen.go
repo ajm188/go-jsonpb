@@ -7,22 +7,34 @@ import (
 	"google.golang.org/protobuf/types/pluginpb"
 )
 
+type Options struct {
+	GithubProtobuf bool
+}
+
 // GeneratedFile is the set of methods needed by protoc-gen-go-json
 // on *protogen.GeneratedFile. It exists mainly for ease of testing.
 type GeneratedFile interface {
 	P(...interface{})
 }
 
-func GenerateFile(g GeneratedFile, req *pluginpb.CodeGeneratorRequest, file *protogen.File) {
+func GenerateFile(g GeneratedFile, req *pluginpb.CodeGeneratorRequest, file *protogen.File, opts Options) {
 	GenerateHeader(g, req, file)
 
 	g.P("package ", file.GoPackageName)
 	g.P()
 
-	g.P(`import "google.golang.org/protobuf/encoding/protojson"`)
+	if opts.GithubProtobuf {
+		g.P("import (")
+		g.P(`"bytes"`)
+		g.P()
+		g.P(`"github.com/golang/protobuf/jsonpb"`)
+		g.P(")")
+	} else {
+		g.P(`import "google.golang.org/protobuf/encoding/protojson"`)
+	}
 	g.P()
 
-	GenerateMarshalers(g, collectMessages(file))
+	GenerateMarshalers(g, collectMessages(file), opts)
 }
 
 func GenerateHeader(g GeneratedFile, req *pluginpb.CodeGeneratorRequest, file *protogen.File) {
@@ -45,10 +57,21 @@ func GenerateHeader(g GeneratedFile, req *pluginpb.CodeGeneratorRequest, file *p
 	g.P()
 }
 
-func GenerateMarshalers(g GeneratedFile, messages []*protogen.Message) {
+func GenerateMarshalers(g GeneratedFile, messages []*protogen.Message, opts Options) {
 	for _, message := range messages {
 		g.P("func (x *", message.GoIdent, ") MarshalJSON() ([]byte, error) {")
-		g.P("return protojson.Marshal(x)")
+		if opts.GithubProtobuf {
+			g.P("buf := bytes.Buffer{}")
+			g.P("m := jsonpb.Marshaler{}")
+			g.P()
+			g.P("if err := m.Marshal(&buf, x); err != nil {")
+			g.P("return nil, err")
+			g.P("}")
+			g.P()
+			g.P("return buf.Bytes(), nil")
+		} else {
+			g.P("return protojson.Marshal(x)")
+		}
 		g.P("}")
 		g.P()
 	}
