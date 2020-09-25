@@ -3,7 +3,6 @@ on: [push, pull_request]
 
 jobs:
   test:
-    needs: checkout
     strategy:
       matrix:
         go: ['1.13', '1.14', '1.15']
