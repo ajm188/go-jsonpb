@@ -7,6 +7,7 @@ import (
 	"google.golang.org/protobuf/types/pluginpb"
 )
 
+// Options represents the flags passed to protoc-gen-go-json via the protoc command line.
 type Options struct {
 	GithubProtobuf bool
 }
@@ -17,6 +18,8 @@ type GeneratedFile interface {
 	P(...interface{})
 }
 
+// GenerateFile generates the jsonpb/protojson marshaler implementations for every Message
+// in the input proto file.
 func GenerateFile(g GeneratedFile, req *pluginpb.CodeGeneratorRequest, file *protogen.File, opts Options) {
 	GenerateHeader(g, req, file)
 
@@ -37,6 +40,8 @@ func GenerateFile(g GeneratedFile, req *pluginpb.CodeGeneratorRequest, file *pro
 	GenerateMarshalers(g, collectMessages(file), opts)
 }
 
+// GenerateHeader generates the header comments, which contain information about the
+// build tools and arguments.
 func GenerateHeader(g GeneratedFile, req *pluginpb.CodeGeneratorRequest, file *protogen.File) {
 	protocVersion := "(unknown)"
 	if v := req.GetCompilerVersion(); v != nil {
@@ -57,6 +62,8 @@ func GenerateHeader(g GeneratedFile, req *pluginpb.CodeGeneratorRequest, file *p
 	g.P()
 }
 
+// GenerateMarshalers generates the actual MarshalJSON implementations for each Message
+// in the input file.
 func GenerateMarshalers(g GeneratedFile, messages []*protogen.Message, opts Options) {
 	for _, message := range messages {
 		g.P("func (x *", message.GoIdent, ") MarshalJSON() ([]byte, error) {")
