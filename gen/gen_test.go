@@ -44,10 +44,22 @@ func (fd *TestProtoFD) Path() string {
 func (tf *TestFile) P(ts ...interface{}) {
 	b := strings.Builder{}
 	for _, t := range ts {
-		b.WriteString(fmt.Sprint(t))
+		switch t := t.(type) {
+		case protogen.GoIdent:
+			b.WriteString(tf.QualifiedGoIdent(t))
+		default:
+			b.WriteString(fmt.Sprint(t))
+		}
 	}
 
 	tf.b = append(tf.b, b.String())
+}
+
+// This is a deliberately incomplete implementation of protogen.GeneratedFile.QualifiedGoIdent
+// (see https://github.com/protocolbuffers/protobuf-go/blob/db5c900f0ce544131509b33f6d68ec651e3ca91c/compiler/protogen/protogen.go#L1056).
+// We're only testing intra-package identifiers, so the other cases aren't worth considering.
+func (tf *TestFile) QualifiedGoIdent(t protogen.GoIdent) string {
+	return t.GoName
 }
 
 func TestGenerateHeader(t *testing.T) {
@@ -95,6 +107,50 @@ func TestGenerateHeader(t *testing.T) {
 			GenerateHeader(g, req, test.file)
 
 			assert.Equal(t, test.lines, g.b, "Got %+v", g.b)
+		})
+	}
+}
+
+func TestGenerateMarshalers(t *testing.T) {
+	tests := []struct {
+		name     string
+		messages []*protogen.Message
+		lines    []string
+	}{
+		{
+			name: "",
+			messages: []*protogen.Message{
+				{
+					GoIdent: protogen.GoIdent{GoName: "T1"},
+				},
+				{
+					GoIdent: protogen.GoIdent{GoName: "T2"},
+				},
+			},
+			lines: []string{
+				"func (x *T1) MarshalJSON() ([]byte, error) {",
+				"return protojson.Marshal(x)",
+				"}",
+				"",
+				"func (x *T2) MarshalJSON() ([]byte, error) {",
+				"return protojson.Marshal(x)",
+				"}",
+				"",
+			},
+		},
+		{
+			name:     "empty message list",
+			messages: []*protogen.Message{},
+			lines:    []string{},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			g := &TestFile{b: []string{}}
+			GenerateMarshalers(g, test.messages)
+
+			assert.Equal(t, test.lines, g.b)
 		})
 	}
 }
