@@ -1,7 +1,0 @@
-package test
-
-import "google.golang.org/protobuf/encoding/protojson"
-
-func (m *TestRequest) MarshalJSON() ([]byte, error) {
-	return protojson.Marshal(m)
-}
