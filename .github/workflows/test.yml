@@ -3,6 +3,7 @@ on: [push, pull_request]
 
 jobs:
   checkout:
+    name: checkout
     steps:
     - uses: actions/checkout@v2
   test:
