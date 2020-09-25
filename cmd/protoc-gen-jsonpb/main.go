@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/ajm188/go-jsonpb/gen"
 	"github.com/ajm188/go-jsonpb/template"
 )
 
@@ -97,8 +96,6 @@ func main() {
 	defer dest.Close()
 
 	switch *mode {
-	case "inplace":
-		must(gen.Generate(src, dest))
 	case "template":
 		must(template.Generate(src, dest))
 	}
