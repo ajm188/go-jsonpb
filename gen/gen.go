@@ -22,14 +22,7 @@ func GenerateFile(g GeneratedFile, req *pluginpb.CodeGeneratorRequest, file *pro
 	g.P(`import "google.golang.org/protobuf/encoding/protojson"`)
 	g.P()
 
-	messages := collectMessages(file)
-
-	for _, message := range messages {
-		g.P("func (x *", message.GoIdent, ") MarshalJSON() ([]byte, error) {")
-		g.P("return protojson.Marshal(x)")
-		g.P("}")
-		g.P()
-	}
+	GenerateMarshalers(g, collectMessages(file))
 }
 
 func GenerateHeader(g GeneratedFile, req *pluginpb.CodeGeneratorRequest, file *protogen.File) {
@@ -52,6 +45,17 @@ func GenerateHeader(g GeneratedFile, req *pluginpb.CodeGeneratorRequest, file *p
 	g.P()
 }
 
+func GenerateMarshalers(g GeneratedFile, messages []*protogen.Message) {
+	for _, message := range messages {
+		g.P("func (x *", message.GoIdent, ") MarshalJSON() ([]byte, error) {")
+		g.P("return protojson.Marshal(x)")
+		g.P("}")
+		g.P()
+	}
+}
+
+// Implementation lifted nearly wholesale from protoc-gen-go.
+// https://github.com/protocolbuffers/protobuf-go/blob/db5c900f0ce544131509b33f6d68ec651e3ca91c/cmd/protoc-gen-go/internal_gengo/init.go#L50-L84
 func collectMessages(file *protogen.File) []*protogen.Message {
 	allMessages := []*protogen.Message{}
 
