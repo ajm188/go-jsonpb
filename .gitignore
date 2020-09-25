@@ -1,2 +1,2 @@
 # local build artifact
-protoc-gen-jsonpb
+protoc-gen-go-json

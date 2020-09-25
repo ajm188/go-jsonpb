@@ -1,0 +1,25 @@
+FROM golang:buster
+
+# Install depedencies
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    build-essential \
+    ca-certificates \
+    curl \
+    unzip \
+    wget
+
+ARG PROTOC_VERSION=3.13.0
+
+# Download protoc
+RUN curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/protoc-${PROTOC_VERSION}-linux-x86_64.zip && \
+    unzip protoc-${PROTOC_VERSION}-linux-x86_64.zip -d /protoc && \
+    mv /protoc/bin/protoc /usr/local/bin/ && \
+    mv /protoc/include /usr/local/ && \
+    rm -rf protoc-${PROTOC_VERSION}-linux-x86_64.zip
+
+ADD go.mod /go/protoc-gen-go-json/
+ADD go.sum /go/protoc-gen-go-json/
+WORKDIR /go/protoc-gen-go-json/
+
+RUN go mod download

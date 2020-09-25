@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package test;
+option go_package = "test";
+
+service Test {
+    rpc Method1(Message1) returns (Response1) {}
+    rpc Method2(Message2) returns (Response2) {}
+}
+
+message Message1 {
+    string field1 = 1;
+    enum Level {
+        FATAL = 0;
+        ERROR = 10;
+        WARNING = 20;
+        INFO = 30;
+        DEBUG = 40;
+    }
+
+    Level level = 2;
+}
+
+message Response1 {}
+
+message Message2 {
+    message SubMessage {
+        string field1 = 1;
+        string field2 = 2;
+    }
+
+    SubMessage m = 1;
+}
+
+message Response2 {}
